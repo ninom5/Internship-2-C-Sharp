@@ -1,41 +1,75 @@
-﻿Console.WriteLine("1 - Korisnici");
-Console.WriteLine("2 - Računi");
-Console.WriteLine("3 - Izlaz iz aplikacije");
-
-char option = Console.ReadKey().KeyChar; //char, tako da se u slucaju unosa slova program ne prekine
-
-switch(option)
+﻿public static class Global
 {
-    case '1':
-        Console.WriteLine("\n");
-        Users();
-        break;
-    case '2':
-        Console.WriteLine("\n");
-        Accounts();
-        break;
-    case '3':
-        return;
-    default:
-        Console.WriteLine("\nKrivi unos, odaberite jednu od opcija");
-        break; //add funct to choose again for wrong input
-}    
+    public static int id = 0;
+}
+
+var UserDict = new Dictionary<int, Tuple<string, string, DateTime>>();
+
+do
+{
+    Console.WriteLine("1 - Korisnici");
+    Console.WriteLine("2 - Računi");
+    Console.WriteLine("3 - Izlaz iz aplikacije");
+
+    char option = Console.ReadKey().KeyChar; //char, tako da se u slucaju unosa slova program ne prekine
+
+
+    switch (option)
+    {
+        case '1':
+            Console.WriteLine("\n");
+            Users();
+            break;
+        case '2':
+            Console.WriteLine("\n");
+            Accounts();
+            break;
+        case '3':
+            return;
+        default:
+            Console.WriteLine("\nKrivi unos, odaberite jednu od opcija");
+            break;
+    }
+}while(true);
 
 static void Users()
 {
-    Console.WriteLine("1. Korisnici");
-    Console.WriteLine("\t1 - Unos novog korisnika");
-    Console.WriteLine("\t2 - Brisanje korisnika\n \t\t a) po id-u \n \t\t b) po imenu i prezimenu");
-    Console.WriteLine("\t3 - Uređivanje korisnika \n \t\t a) po id-u");
-    Console.WriteLine("\t4 - Pregled korisnika \n \t\t a) ispis svih korisnika abecedno po prezimenu \n \t\t b) ispis svih onih s više od 30 godina \n \t\t c) ispis svih s bar jednim računom u minusu");
+    char option;
+    do
+    {
+        Console.WriteLine("1. Korisnici");
+        Console.WriteLine("\t1 - Unos novog korisnika");
+        Console.WriteLine("\t2 - Brisanje korisnika\n \t\t a) po id-u \n \t\t b) po imenu i prezimenu");
+        Console.WriteLine("\t3 - Uređivanje korisnika \n \t\t a) po id-u");
+        Console.WriteLine("\t4 - Pregled korisnika \n \t\t ");
+        option = Console.ReadKey().KeyChar;
 
+        switch (option)
+        {
+            case '1':
+                CreateNewUser();
+                break;
+            case '2':
+                DeleteUser();
+                break;
+            case '3':
+                EditUser(); // naziv promini
+                break;
+            case '4':
+                ShowOptions();
+                break;
+            default:
+                Console.WriteLine("Krivi unos. Odaberite ponovno");
+                break;
+        }
+    } while(option < '1' || option > '4'); //dok nije odabrana opcija 1 do 4
 
 }
 
 static void Accounts()
 {
     Console.WriteLine("Unesite ime i prezime korisnika");
-    string user = Console.ReadLine();
+    var user = Console.ReadLine();
     //choose user account
 
     Console.WriteLine("\n1 - Pregled računa: ");//choose type of account(tekuci ziro itd)
@@ -52,4 +86,62 @@ static void Accounts()
         "d) postotak udjela rashoda za odabranu kategoriju \n\t e) prosječni iznos transakcija za odabrani mjesec i godinu \n\t f) prosječni iznos transakcije za odabranu kategoriju");
     
     Console.WriteLine("0 - izlaz iz aplikacije");
-}   
+}
+
+static void ShowOptions()
+{
+    bool isCorrectOption = true;
+    do
+    {
+        Console.WriteLine("Odaberite koje korisnike želite prikazati: a) ispis svih korisnika abecedno po prezimenu \n \t\t b) ispis svih onih s više od 30 godina \n \t\t c) ispis svih s bar jednim računom u minusu.");
+        char filterOption = Console.ReadKey().KeyChar;
+        switch (filterOption)
+        {
+            case 'a':
+                PrintBySurname();
+                break;
+            case 'b':
+                PrintUsersOverThirty();
+                break;
+            case 'c':
+                PrintUsersInMinus();
+                break;
+            default:
+                Console.WriteLine("Krivi unos. Odaberite ponovno");
+                isCorrectOption = false;
+                break;
+        }
+    }while(!isCorrectOption);
+}
+
+static void CreateNewUser()
+{
+    try
+    {
+        DateTime dateOfBirth;
+        Console.WriteLine("Enter name");
+        string name = Console.ReadLine();
+        Console.WriteLine("Enter surname");
+        string surname = Console.ReadLine();
+        bool isValid = true;
+        do {
+            Console.WriteLine("Enter date of birth in format dd/MM/yyyy");
+            string date = Console.ReadLine();
+            if (!(DateTime.TryParseExact(date, "dd/MM/yyyy", null, System.Globalization.DateTimeStyles.None, out dateOfBirth)))
+            {
+                Console.WriteLine("Invalid date format"); 
+                isValid = false;
+            }
+        }while(!isValid)
+
+        int id = Global.id++;
+        UserDict.Add(id, Tuple.Create(name, surname, dateOfBirth));
+        Console.WriteLine($"User successfully created. Name: {name}, surname: {surname}, date of birth: {dateOfBirth}, ID: {id}");
+
+    }catch(Exception ex)
+    {
+        Console.WriteLine($"Error: {ex.Message}");    
+    }
+    
+    
+}
