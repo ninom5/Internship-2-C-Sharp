@@ -1,5 +1,23 @@
 ﻿int globalId = 0;
-Dictionary<int, Tuple<string, string, DateTime>> UserDict = new Dictionary<int, Tuple<string, string, DateTime>>();
+Dictionary<int, Tuple<string, string, DateTime, Dictionary<string, double>>> UserDict = new Dictionary<int, Tuple<string, string, DateTime, Dictionary<string, double>>>();
+var bankAccount = new Dictionary<string, double>
+        {
+            { "tekuci", 100.00},
+            { "ziro", 0.00},
+            { "prepaid", 0.00}
+        };
+
+DateTime user1BDay = new DateTime(1987, 06, 24);
+UserDict.Add(globalId++, Tuple.Create("Lionel", "Messi", user1BDay, bankAccount));
+
+DateTime user2BDay = new DateTime(1985, 02, 05);
+UserDict.Add(globalId++, Tuple.Create("Cristiano", "Ronaldo", user2BDay, bankAccount));
+
+DateTime user3BDay = new DateTime(1981, 10, 03);
+UserDict.Add(globalId++, Tuple.Create("Zlatan", "Ibrahimovic", user3BDay, bankAccount));
+
+DateTime user4BDay = new DateTime(1984, 05, 11);
+UserDict.Add(globalId++, Tuple.Create("Andres", "Iniesta", user4BDay, bankAccount));
 
 do
 {
@@ -145,7 +163,9 @@ void CreateNewUser()
         } while (!isValid);
 
         int id = globalId++;
-        UserDict.Add(id, Tuple.Create(name, surname, dateOfBirth));
+
+        
+        UserDict.Add(id, Tuple.Create(name, surname, dateOfBirth, bankAccount));
         Console.WriteLine($"User successfully created. Name: {name}, surname: {surname}, date of birth: {dateOfBirth}, ID: {id}");
 
     }catch(Exception ex)
@@ -173,8 +193,10 @@ void DeleteUser(char option)
                 Console.WriteLine("Ne postoji korisnik s unesenim ID-om");
                 continue;
             }
+            string userName = UserDict[idToDelete].Item2;
+            var userSurname = UserDict[idToDelete].Item3;
             UserDict.Remove(idToDelete);
-            Console.WriteLine($"Korisnik s {idToDelete} ID-om uspješno izbrisan");
+            Console.WriteLine($"Korisnik {userName + " " + userSurname + " s ID: " + idToDelete} uspješno izbrisan");
             break;
         }
     }
@@ -224,7 +246,9 @@ void EditUser()
             Console.WriteLine("Ne postoji korisnik s unesenim ID-om");
             continue;
         }
-        Console.WriteLine($"Pronađen korisnik {UserDict[idToEdit].Item1 + " " + UserDict[idToEdit].Item2 + "rođen " + UserDict[idToEdit].Item3}");
+        Console.WriteLine($"Pronađen korisnik {UserDict[idToEdit].Item1 + " " + UserDict[idToEdit].Item2 + " rođen " + UserDict[idToEdit].Item3}");
+
+        var bankAccounts = UserDict[idToEdit].Item4;
 
         Console.WriteLine("Unesite u koje ime želite promijeniti. Ako ne želite promijeniti unesite isto ime");
         var newName = Console.ReadLine().Trim();     
@@ -263,7 +287,7 @@ void EditUser()
                 Console.WriteLine("Unesen neispravan format, unesite opet");
         }while(isValidDate);
         
-        UserDict[idToEdit] = new Tuple<string, string, DateTime>(newName, newSurname, newDateOfBirth);
+        UserDict[idToEdit] = Tuple.Create(newName, newSurname, newDateOfBirth, bankAccounts);
         Console.WriteLine("Korisnik uspješno ažuriran");
         break;
     }
