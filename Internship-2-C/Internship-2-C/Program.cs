@@ -1,11 +1,18 @@
 ﻿int globalId = 0;
 Dictionary<int, Tuple<string, string, DateTime, Dictionary<string, double>>> UserDict = new Dictionary<int, Tuple<string, string, DateTime, Dictionary<string, double>>>();
 var bankAccount = new Dictionary<string, double>
-        {
-            { "tekuci", 100.00},
-            { "ziro", 0.00},
-            { "prepaid", 0.00}
-        };
+{
+    { "tekuci", 100.00},
+    { "ziro", 0.00},
+    { "prepaid", 0.00}
+};
+
+var bankAccountMinus = new Dictionary<string, double>
+{
+    { "tekuci", -100.00},
+    { "ziro", -10.00},
+    { "prepaid", 0.00}
+};
 
 DateTime user1BDay = new DateTime(1987, 06, 24);
 UserDict.Add(globalId++, Tuple.Create("Lionel", "Messi", user1BDay, bankAccount));
@@ -18,6 +25,9 @@ UserDict.Add(globalId++, Tuple.Create("Zlatan", "Ibrahimovic", user3BDay, bankAc
 
 DateTime user4BDay = new DateTime(1984, 05, 11);
 UserDict.Add(globalId++, Tuple.Create("Andres", "Iniesta", user4BDay, bankAccount));
+
+DateTime user5BDay = new DateTime(1977, 02, 24);
+UserDict.Add(globalId++, Tuple.Create("Floyd", "Mayweather", user5BDay, bankAccountMinus));
 
 do
 {
@@ -92,53 +102,118 @@ void Users()
     } while(option < '1' || option > '4'); //dok nije odabrana opcija 1 do 4
 
 }
-
+//popravljeni ShowOptions(), CreateNewUser() i valjda Accounts() ostale triba provjerit
 void Accounts()
 {
-    Console.WriteLine("Unesite ime i prezime korisnika");
-    var user = Console.ReadLine();
-    //choose user account
-
-    Console.WriteLine("\n1 - Pregled računa: ");//choose type of account(tekuci ziro itd)
-
-    Console.WriteLine("1 - Unos nove transakcije \n\t a) trenutno izvršena transakcija \n\t b) ranije izvršena transakcija");
-    Console.WriteLine("2 - Brisanje transakcije");
-    Console.WriteLine("\t a) po id-u \n\t b)ispod unesenog iznosa \n\t c) iznad unesenog iznosa \n\t d) svih prihoda \n\t e) svih rashoda \n\t svih transakcija za odabranu kategoriju");
-    Console.WriteLine("3 - Uređivanje transakcije \n\t a) po id-u");
-    Console.WriteLine("4 - Pregled transakcija");
-    Console.WriteLine("\t a) sve transakcije kako su spremljene \n\t b) sve transakcije sortirane po iznosu uzlazno \n\t c) sve transakcije sortirane po iznosu silazno " +
-        "\n\t d) sve transakcije sortirane po opisu abecedno \n\t e) sve transakcije sortirane po datumu uzlazno \n\t f) sve transakcije sortirane po datumu silazno" +
-        "\n\t g) svi prihodi \n\t svi rashodi \n\t i) sve transakcije za odabranu kategoriju \n\t j) sve transakcije za odabrani tip i kategoriju");
-    Console.WriteLine("5 - Financijsko izvješće \n\t a) trenutno stanje računa \n\t b) broj ukupnih transakcija \n\t c) ukupan iznos prihoda i rashoda za odabrani mjesec i godinu \n\t " +
-        "d) postotak udjela rashoda za odabranu kategoriju \n\t e) prosječni iznos transakcija za odabrani mjesec i godinu \n\t f) prosječni iznos transakcije za odabranu kategoriju");
     
-    Console.WriteLine("0 - izlaz iz aplikacije");
+    while (true)
+    {
+        bool isFound = false;
+        var user = default(KeyValuePair<int, Tuple<string, string, DateTime, Dictionary<string, double>>>);
+        Console.WriteLine("Unesite ime i prezime osobe koju zelite odabrati");
+        string[] nameAndSurname = Console.ReadLine().Trim().Split(" ");
+
+        if (nameAndSurname.Length != 2)
+        {
+            Console.WriteLine("Unesite ispravan format imena i prezimena. Ime razmak prezime");
+            continue;
+        }
+
+        foreach (var entry in UserDict)
+        {
+            if (entry.Value.Item1 == nameAndSurname[0] && entry.Value.Item2 == nameAndSurname[1])
+            {
+                user = entry;
+                isFound = true;
+                break;
+            }
+        }
+        if(!isFound)
+        {
+            bool isValid = false;
+            do
+            {
+                Console.WriteLine($"Korisnik {nameAndSurname[0]} {nameAndSurname[1]} nije pronađen. \nAko zelite opet upisati ime pritisnite 1 ako se zelite vratiti pritisnite 0");
+                char option = Console.ReadKey().KeyChar;
+                if (option == '1')
+                    continue;
+                else if (option == '0')
+                    return;
+                else
+                {
+                    Console.WriteLine("Krivi unos. Birajte opet");
+                    isValid = true;
+                }
+            } while (isValid);
+        }
+        //var accounts = user.Value.Item4;
+        bool isPicked = false;
+        while(!isPicked)
+        {
+            Console.WriteLine($"\n1 - Pregled računa: \n\t a) Tekuci \n\t b) Ziro \n\t c) Prepaid \nOdaberite jedan od racuna");
+            string selectedAccount;
+            char chooseAccount = Console.ReadKey().KeyChar;
+            switch (chooseAccount)
+            {
+                case 'a':
+                    selectedAccount = "tekuci";
+                    isPicked = true;
+                    break;
+                case 'b':
+                    selectedAccount = "ziro";
+                    isPicked = true;
+                    break;
+                case 'c':
+                    selectedAccount = "prepaid";
+                    isPicked = true;
+                    break;
+                default:
+                    Console.WriteLine("Krivi unos. Odaberite opet");
+                    break;
+            }
+        }
+        Console.WriteLine("\n1 - Unos nove transakcije \n\t a) trenutno izvršena transakcija \n\t b) ranije izvršena transakcija");
+        Console.WriteLine("2 - Brisanje transakcije");
+        Console.WriteLine("\t a) po id-u \n\t b)ispod unesenog iznosa \n\t c) iznad unesenog iznosa \n\t d) svih prihoda \n\t e) svih rashoda \n\t f) svih transakcija za odabranu kategoriju");
+        Console.WriteLine("3 - Uređivanje transakcije \n\t a) po id-u");
+        Console.WriteLine("4 - Pregled transakcija");
+        Console.WriteLine("\t a) sve transakcije kako su spremljene \n\t b) sve transakcije sortirane po iznosu uzlazno \n\t c) sve transakcije sortirane po iznosu silazno " +
+            "\n\t d) sve transakcije sortirane po opisu abecedno \n\t e) sve transakcije sortirane po datumu uzlazno \n\t f) sve transakcije sortirane po datumu silazno" +
+            "\n\t g) svi prihodi \n\t h) svi rashodi \n\t i) sve transakcije za odabranu kategoriju \n\t j) sve transakcije za odabrani tip i kategoriju");
+        Console.WriteLine("5 - Financijsko izvješće \n\t a) trenutno stanje računa \n\t b) broj ukupnih transakcija \n\t c) ukupan iznos prihoda i rashoda za odabrani mjesec i godinu \n\t " +
+            "d) postotak udjela rashoda za odabranu kategoriju \n\t e) prosječni iznos transakcija za odabrani mjesec i godinu \n\t f) prosječni iznos transakcije za odabranu kategoriju");
+
+        Console.WriteLine("0 - izlaz iz aplikacije");
+    }
 }
 
-static void ShowOptions()
+void ShowOptions()
 {
-    bool isCorrectOption = true;
-    do
+    bool isCorrectOption = false;
+    while (!isCorrectOption)
     {
-        Console.WriteLine("Odaberite koje korisnike želite prikazati: a) ispis svih korisnika abecedno po prezimenu \n \t\t b) ispis svih onih s više od 30 godina \n \t\t c) ispis svih s bar jednim računom u minusu.");
+        Console.WriteLine("Odaberite koje korisnike želite prikazati: \n\t\t a) ispis svih korisnika abecedno po prezimenu \n \t\t b) ispis svih onih s više od 30 godina \n \t\t c) ispis svih s bar jednim računom u minusu.");
         char filterOption = Console.ReadKey().KeyChar;
         switch (filterOption)
         {
             case 'a':
-                //PrintBySurname();
+                PrintBySurname();
+                isCorrectOption = true;
                 break;
             case 'b':
-                //PrintUsersOverThirty();
+                PrintUsersOverThirty();
+                isCorrectOption = true;
                 break;
             case 'c':
-                //PrintUsersInMinus();
+                PrintUsersInMinus();
+                isCorrectOption = true;
                 break;
             default:
                 Console.WriteLine("Krivi unos. Odaberite ponovno");
                 isCorrectOption = false;
                 break;
         }
-    }while(!isCorrectOption);
+    }
 }
 
 void CreateNewUser()
@@ -160,6 +235,8 @@ void CreateNewUser()
                 Console.WriteLine("Invalid date format");
                 isValid = false;
             }
+            else
+                isValid = true;
         } while (!isValid);
 
         int id = globalId++;
@@ -290,5 +367,56 @@ void EditUser()
         UserDict[idToEdit] = Tuple.Create(newName, newSurname, newDateOfBirth, bankAccounts);
         Console.WriteLine("Korisnik uspješno ažuriran");
         break;
+    }
+}
+
+void PrintBySurname()
+{
+    var sortedBySurname = UserDict.OrderBy(element => element.Value.Item2);
+    Console.WriteLine("Korisnici sortirani po prezimenu");
+    foreach(var dictElement in sortedBySurname )
+    {
+        Console.WriteLine($"{dictElement.Value.Item2 + " " + dictElement.Value.Item1 + " ID " + dictElement.Key + " date of birth: " + dictElement.Value.Item3} ");
+    }
+}
+
+void PrintUsersOverThirty()
+{
+    Console.WriteLine("Korisnici s više od 30 godina");
+    foreach(var dictElement in UserDict)
+    {
+        int userAge = CalculateAge(dictElement);
+        if(userAge >= 30)
+            Console.WriteLine($"ID: {dictElement.Key + " " + dictElement.Value.Item1 + " " + dictElement.Value.Item2 + " date of birth: " + dictElement.Value.Item3 + " godine: " + userAge} ");
+    }
+}
+
+int CalculateAge(KeyValuePair<int, Tuple<string, string, DateTime, Dictionary<string, double>>> dictElement)
+{
+    DateTime currentDate = DateTime.Now;
+    int age = currentDate.Year - dictElement.Value.Item3.Year;
+    if (currentDate.Month < dictElement.Value.Item3.Month)
+        age--;
+    else if (currentDate.Month == dictElement.Value.Item3.Month)
+    {
+        if(currentDate.Day < dictElement.Value.Item3.Day)
+            age--;
+    }
+
+    return age;
+}
+
+void PrintUsersInMinus()
+{
+    foreach (var dictElement in UserDict)
+    {
+        var element = dictElement.Value.Item4;
+        foreach(var elem in element)
+        {
+            if(elem.Value < 0)
+            {
+                Console.WriteLine($"ID: {dictElement.Key + " " + dictElement.Value.Item1 + " " + dictElement.Value.Item2 + " " + dictElement.Value.Item3 + " " + elem.Key + " račun u minusu: " + elem.Value}");
+            }
+        }
     }
 }
