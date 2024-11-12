@@ -106,7 +106,8 @@ void Users()
         Console.WriteLine("\t1 - Unos novog korisnika");
         Console.WriteLine("\t2 - Brisanje korisnika\n \t\t a) po id-u \n \t\t b) po imenu i prezimenu");
         Console.WriteLine("\t3 - Uređivanje korisnika \n \t\t a) po id-u");
-        Console.WriteLine("\t4 - Pregled korisnika \n \t\t ");
+        Console.WriteLine("\t4 - Pregled korisnika \n" +
+            "\t5 - Početni zaslon");
         option = Console.ReadKey().KeyChar;
 
         switch (option)
@@ -143,6 +144,8 @@ void Users()
             case '4':
                 ShowOptions();
                 break;
+            case '5':
+                return;
             default:
                 Console.WriteLine("Krivi unos. Odaberite ponovno");
                 break;
@@ -150,7 +153,7 @@ void Users()
     } while(option < '1' || option > '4'); //dok nije odabrana opcija 1 do 4
 
 }
-//popravljeni ShowOptions(), CreateNewUser(), DeleteUser(), EditUser()(već radilo) i valjda Accounts() ostale triba provjerit
+//popravljeni ShowOptions(), CreateNewUser(), DeleteUser(), EditUser()(već radilo) i valjda Accounts()
 void Accounts()
 {
     while (true)
@@ -198,7 +201,7 @@ void Accounts()
         do
         {
             string selectedAccount;
-            Console.WriteLine($"\n1 - Pregled računa: \n\t a) Tekuci \n\t b) Ziro \n\t c) Prepaid \nOdaberite jedan od racuna");
+            Console.WriteLine($"\n1 - Pregled računa: \n\t a) Tekuci \n\t b) Ziro \n\t c) Prepaid \n2 - Početni zaslon \nOdaberite jedan od racuna(a, b, c ili 2 za vracanje na početni zaslon)");
 
             char chooseAccount = Console.ReadKey().KeyChar;
             switch (chooseAccount) //provjeirt za ovo za krivi unos
@@ -214,6 +217,8 @@ void Accounts()
                 case 'c':
                     selectedAccount = "prepaid";
                     TransactionMenu(user, selectedAccount);
+                    return;
+                case '2':
                     return;
                 default:
                     Console.WriteLine("Krivi unos. Odaberite opet");
@@ -245,16 +250,372 @@ void TransactionMenu(KeyValuePair<int, Tuple<string, string, DateTime, Dictionar
             EnterNewTransaction(user, typeOfAccount);
             return;
         case '2':
-            ChooseHowToDeleteTransactions(user, typeOfAccount);
+            ChooseHowToDeleteTransactions(user, typeOfAccount); //dodat usporedbu vrste racuna, ostalo radi
             return;
         case '3':
-            EditTransactions(user);
+            EditTransactions(user, typeOfAccount);
             return;
-        
-    }
+        case '4':
+            ShowTransactionMenu(user, typeOfAccount);
+            return;
+        case '5':
+            FinanceReportMenu(user, typeOfAccount);
+            return;
+    }//napravljena provjera je li isti racun kao odabrani(tekuci, ziro, prepaid) za sve funkcije osim za brisanje
 
 }
-void EditTransactions(KeyValuePair<int, Tuple<string, string, DateTime, Dictionary<string, double>>> user)
+
+void FinanceReportMenu(KeyValuePair<int, Tuple<string, string, DateTime, Dictionary<string, double>>> user, string typeOfAccount)
+{
+    Console.WriteLine("\n\t a) trenutno stanje računa \n\t b) broj ukupnih transakcija \n\t c) ukupan iznos prihoda i rashoda za odabrani mjesec i godinu \n\t" +
+        " d) postotak udjela rashoda za odabranu kategoriju \n\t e) prosječni iznos transakcija za odabrani mjesec i godinu \n\t f) prosječni iznos transakcije za odabranu kategoriju");
+
+    char option = Console.ReadKey().KeyChar;
+    switch(option)
+    {
+        //case 'a':
+        //    AccountBalance(user, typeOfAccount);
+        //    return;
+        case 'b':
+            NumberOfTransactions(user, typeOfAccount);
+            return;
+
+    }
+}
+void NumberOfTransactions(KeyValuePair<int, Tuple<string, string, DateTime, Dictionary<string, double>>> user, string typeOfAccount)
+{
+    var numOfTotalTransactions = 0;
+    foreach (var transaction in TransactionDict)
+    {
+        if (transaction.Value.Item1 == user.Key && transaction.Value.Item3 == typeOfAccount)
+            numOfTotalTransactions++;
+    }
+    Console.WriteLine($"Broj ukupnih transakcija korisnika: {numOfTotalTransactions}");
+}
+
+//void AccountBalance(KeyValuePair<int, Tuple<string, string, DateTime, Dictionary<string, double>>> user, string typeOfAccount)
+//{
+
+//}
+void ShowTransactionMenu(KeyValuePair<int, Tuple<string, string, DateTime, Dictionary<string, double>>> user, string typeOfAccount)
+{
+    Console.WriteLine("\t a) sve transakcije kako su spremljene \n\t b) sve transakcije sortirane po iznosu uzlazno \n\t c) sve transakcije sortirane po iznosu silazno " +
+        "\n\t d) sve transakcije sortirane po opisu abecedno \n\t e) sve transakcije sortirane po datumu uzlazno \n\t f) sve transakcije sortirane po datumu silazno" +
+        "\n\t g) svi prihodi \n\t h) svi rashodi \n\t i) sve transakcije za odabranu kategoriju \n\t j) sve transakcije za odabrani tip i kategoriju. \n Za vracanje u prethodni izbornik odaberite 0");
+
+    
+    bool isValid = true;
+    do
+    {
+        char option = Console.ReadKey().KeyChar;
+        switch (option)
+        {
+            case 'a':
+                ShowAllTransactions(user, typeOfAccount);
+                return;
+            case 'b':
+                ShowAllTransactionsSortedAscendingByAmount(user, typeOfAccount);
+                return;
+            case 'c':
+                ShowAllTransactionsSortedDescending(user, typeOfAccount);
+                return;
+            case 'd':
+                ShowAllTransactionsSortedAlphabeticallyByDescription(user, typeOfAccount);
+                return;
+            case 'e':
+                ShowAllTransactionsSortedAscendingByDate(user, typeOfAccount);
+                return;
+            case 'f':
+                ShowAllTransactionsDescendingByDate(user, typeOfAccount);
+                return;
+            case 'g':
+                ShowAllIncomes(user, typeOfAccount);
+                return;
+            case 'h':
+                ShowAllExpenses(user, typeOfAccount);
+                return;
+            case 'i':
+                ShowAllTransactionsCategory(user, typeOfAccount);
+                return;
+            case 'j':
+                ShowAllTransactionsCategoryAndType(user, typeOfAccount);
+                return;
+            case '0':
+                TransactionMenu(user, typeOfAccount);
+                return;
+            default:
+                Console.WriteLine("\nKrivi unos. Unesite opet");
+                isValid = false;
+                break;
+        }
+    } while (!isValid);
+}
+
+void ShowAllTransactionsCategoryAndType(KeyValuePair<int, Tuple<string, string, DateTime, Dictionary<string, double>>> user, string typeOfAccount)
+{
+    Console.WriteLine("Odaberite tip(rashod, prihod)");
+    var type = Console.ReadLine();
+    if(type != "prihod" && type != "rashod")
+    {
+        Console.WriteLine("Krivi unos, odaberite ispravan tip");
+        ShowAllTransactionsCategoryAndType(user, typeOfAccount);
+        return;
+    }
+    Console.WriteLine("Odaberite kategoriju");
+    var category = Console.ReadLine();
+    if (type == "prihod" && income.ContainsValue(category))
+    {
+        bool isFound = false;
+
+        var sortedTransactions = TransactionDict
+            .Where(transaction => transaction.Value.Item1 == user.Key && transaction.Value.Item3 == typeOfAccount && type == transaction.Value.Item5 && category == transaction.Value.Item6);
+
+        Console.WriteLine("\nSve transakcije s prihodima i odabranom kategorijom:");
+        foreach (var transaction in sortedTransactions)
+        {
+            var Values = transaction.Value;
+            Console.WriteLine($"Transaction ID: {transaction.Key + ", ID korisnika: " + Values.Item1 + ", iznos: " + Values.Item2 + ", Tip racuna: " + Values.Item3 + ", opis transakcije: " + Values.Item4 + ",\n tip transakcije: " +
+                    Values.Item5 + ", kategorija: " + Values.Item6 + ", datum i vrijeme transakcije: " + Values.Item7} ");
+            isFound = true;
+        }
+
+        if (!isFound)
+        {
+            Console.WriteLine("Nema pronađenih transakcija za odabranu vrstu računa i korisnika");
+        }
+    }
+    else if(type == "rashod" && expense.ContainsValue(category))
+    {
+        bool isFound = false;
+
+        var sortedTransactions = TransactionDict
+            .Where(transaction => transaction.Value.Item1 == user.Key && transaction.Value.Item3 == typeOfAccount && type == transaction.Value.Item5 && category == transaction.Value.Item6);
+
+        Console.WriteLine("\nSve transakcije s rashodima i odabranom kategorijom:");
+        foreach (var transaction in sortedTransactions)
+        {
+            var Values = transaction.Value;
+            Console.WriteLine($"Transaction ID: {transaction.Key + ", ID korisnika: " + Values.Item1 + ", iznos: " + Values.Item2 + ", Tip racuna: " + Values.Item3 + ", opis transakcije: " + Values.Item4 + ",\n tip transakcije: " +
+                    Values.Item5 + ", kategorija: " + Values.Item6 + ", datum i vrijeme transakcije: " + Values.Item7} ");
+            isFound = true;
+        }
+
+        if (!isFound)
+        {
+            Console.WriteLine("Nema pronađenih transakcija za odabranu vrstu računa i korisnika");
+        }
+    }
+    else
+    {
+        Console.WriteLine("Kategorija ne postoji, unesite opet");
+        ShowAllTransactionsCategory(user, typeOfAccount);
+        return;
+    }
+}
+
+void ShowAllTransactionsCategory(KeyValuePair<int, Tuple<string, string, DateTime, Dictionary<string, double>>> user, string typeOfAccount)
+{
+    Console.WriteLine("Odaberite kategoriju");
+    var category = Console.ReadLine();
+    if(income.ContainsValue(category) || expense.ContainsValue(category))
+    {
+        bool isFound = false;
+
+        var sortedTransactions = TransactionDict
+            .Where(transaction => transaction.Value.Item1 == user.Key && transaction.Value.Item3 == typeOfAccount && category == transaction.Value.Item6);
+
+        Console.WriteLine("\nSve transakcije s odabranom kategorijom:");
+        foreach (var transaction in sortedTransactions)
+        {
+            var Values = transaction.Value;
+            Console.WriteLine($"Transaction ID: {transaction.Key + ", ID korisnika: " + Values.Item1 + ", iznos: " + Values.Item2 + ", Tip racuna: " + Values.Item3 + ", opis transakcije: " + Values.Item4 + ",\n tip transakcije: " +
+                    Values.Item5 + ", kategorija: " + Values.Item6 + ", datum i vrijeme transakcije: " + Values.Item7} ");
+            isFound = true;
+        }
+
+        if (!isFound)
+        {
+            Console.WriteLine("Nema pronađenih transakcija za odabranu vrstu računa i korisnika");
+        }
+    }
+    else
+    {
+        Console.WriteLine("Kategorija ne postoji, unesite opet");
+        ShowAllTransactionsCategory(user, typeOfAccount);
+        return;
+    }
+}
+void ShowAllExpenses(KeyValuePair<int, Tuple<string, string, DateTime, Dictionary<string, double>>> user, string typeOfAccount)
+{
+    bool isFound = false;
+
+    var sortedTransactions = TransactionDict
+        .Where(transaction => transaction.Value.Item1 == user.Key && transaction.Value.Item3 == typeOfAccount && "rashod" == transaction.Value.Item5);
+
+    Console.WriteLine("\nSve transakcije s rashodima:");
+    foreach (var transaction in sortedTransactions)
+    {
+        var Values = transaction.Value;
+        Console.WriteLine($"Transaction ID: {transaction.Key + ", ID korisnika: " + Values.Item1 + ", iznos: " + Values.Item2 + ", Tip racuna: " + Values.Item3 + ", opis transakcije: " + Values.Item4 + ",\n tip transakcije: " +
+                Values.Item5 + ", kategorija: " + Values.Item6 + ", datum i vrijeme transakcije: " + Values.Item7} ");
+        isFound = true;
+    }
+
+    if (!isFound)
+    {
+        Console.WriteLine("Nema pronađenih transakcija za odabranu vrstu računa i korisnika");
+    }
+}
+void ShowAllIncomes(KeyValuePair<int, Tuple<string, string, DateTime, Dictionary<string, double>>> user, string typeOfAccount)
+{
+    bool isFound = false;
+
+    var sortedTransactions = TransactionDict
+        .Where(transaction => transaction.Value.Item1 == user.Key && transaction.Value.Item3 == typeOfAccount && "prihod" == transaction.Value.Item5);
+
+    Console.WriteLine("\nSve transakcije s prihodima:");
+    foreach (var transaction in sortedTransactions)
+    {
+        var Values = transaction.Value;
+        Console.WriteLine($"Transaction ID: {transaction.Key + ", ID korisnika: " + Values.Item1 + ", iznos: " + Values.Item2 + ", Tip racuna: " + Values.Item3 + ", opis transakcije: " + Values.Item4 + ",\n tip transakcije: " +
+                Values.Item5 + ", kategorija: " + Values.Item6 + ", datum i vrijeme transakcije: " + Values.Item7} ");
+        isFound = true;
+    }
+
+    if (!isFound)
+    {
+        Console.WriteLine("Nema pronađenih transakcija za odabranu vrstu računa i korisnika");
+    }
+}
+void ShowAllTransactionsDescendingByDate(KeyValuePair<int, Tuple<string, string, DateTime, Dictionary<string, double>>> user, string typeOfAccount)
+{
+    bool isFound = false;
+
+    var sortedTransactions = TransactionDict
+        .Where(transaction => transaction.Value.Item1 == user.Key && transaction.Value.Item3 == typeOfAccount)
+        .OrderBy(transaction => transaction.Value.Item7);
+
+    Console.WriteLine("\nTransakcije sortirani po datumu silazno: ");
+    foreach (var transaction in sortedTransactions)
+    {
+        var Values = transaction.Value;
+        Console.WriteLine($"Transaction ID: {transaction.Key + ", ID korisnika: " + Values.Item1 + ", iznos: " + Values.Item2 + ", Tip racuna: " + Values.Item3 + ", opis transakcije: " + Values.Item4 + ",\n tip transakcije: " +
+                Values.Item5 + ", kategorija: " + Values.Item6 + ", datum i vrijeme transakcije: " + Values.Item7} ");
+        isFound = true;
+    }
+
+    if (!isFound)
+    {
+        Console.WriteLine("Nema pronađenih transakcija za odabranu vrstu računa i korisnika");
+    }
+}
+void ShowAllTransactionsSortedAscendingByDate(KeyValuePair<int, Tuple<string, string, DateTime, Dictionary<string, double>>> user, string typeOfAccount)
+{
+    bool isFound = false;
+
+    var sortedTransactions = TransactionDict
+        .Where(transaction => transaction.Value.Item1 == user.Key && transaction.Value.Item3 == typeOfAccount)
+        .OrderBy(transaction => transaction.Value.Item7);
+
+    Console.WriteLine("\nTransakcije sortirani po datumu uzlazno: ");
+    foreach (var transaction in sortedTransactions)
+    {
+        var Values = transaction.Value;
+        Console.WriteLine($"Transaction ID: {transaction.Key + ", ID korisnika: " + Values.Item1 + ", iznos: " + Values.Item2 + ", Tip racuna: " + Values.Item3 + ", opis transakcije: " + Values.Item4 + ",\n tip transakcije: " +
+                Values.Item5 + ", kategorija: " + Values.Item6 + ", datum i vrijeme transakcije: " + Values.Item7} ");
+        isFound = true;
+    }
+
+    if (!isFound)
+    {
+        Console.WriteLine("Nema pronađenih transakcija za odabranu vrstu računa i korisnika");
+    }
+}
+void ShowAllTransactionsSortedAlphabeticallyByDescription(KeyValuePair<int, Tuple<string, string, DateTime, Dictionary<string, double>>> user, string typeOfAccount)
+{
+    bool isFound = false;
+
+    var sortedTransactions = TransactionDict
+        .Where(transaction => transaction.Value.Item1 == user.Key && transaction.Value.Item3 == typeOfAccount)
+        .OrderBy(transaction => transaction.Value.Item4);
+
+    Console.WriteLine("\nTransakcije sortirani abecedno po opisu: ");
+    foreach (var transaction in sortedTransactions)
+    {
+        var Values = transaction.Value;
+        Console.WriteLine($"Transaction ID: {transaction.Key + ", ID korisnika: " + Values.Item1 + ", iznos: " + Values.Item2 + ", Tip racuna: " + Values.Item3 + ", opis transakcije: " + Values.Item4 + ",\n tip transakcije: " +
+                Values.Item5 + ", kategorija: " + Values.Item6 + ", datum i vrijeme transakcije: " + Values.Item7} ");
+        isFound = true;
+    }
+
+    if (!isFound)
+    {
+        Console.WriteLine("Nema pronađenih transakcija za odabranu vrstu računa i korisnika");
+    }
+}
+void ShowAllTransactionsSortedDescending(KeyValuePair<int, Tuple<string, string, DateTime, Dictionary<string, double>>> user, string typeOfAccount)
+{
+    bool isFound = false;
+
+    var sortedTransactions = TransactionDict
+        .Where(transaction => transaction.Value.Item1 == user.Key && transaction.Value.Item3 == typeOfAccount)
+        .OrderByDescending(transaction => transaction.Value.Item2);
+
+    Console.WriteLine("\nTransakcije sortirani silazno po iznosu: ");
+    foreach (var transaction in sortedTransactions)
+    {
+        var Values = transaction.Value;
+        Console.WriteLine($"Transaction ID: {transaction.Key + ", ID korisnika: " + Values.Item1 + ", iznos: " + Values.Item2 + ", Tip racuna: " + Values.Item3 + ", opis transakcije: " + Values.Item4 + ",\n tip transakcije: " +
+                Values.Item5 + ", kategorija: " + Values.Item6 + ", datum i vrijeme transakcije: " + Values.Item7} ");
+        isFound = true;
+    }
+
+    if (!isFound)
+    {
+        Console.WriteLine("Nema pronađenih transakcija za odabranu vrstu računa i korisnika");
+    }
+}
+void ShowAllTransactionsSortedAscendingByAmount(KeyValuePair<int, Tuple<string, string, DateTime, Dictionary<string, double>>> user, string typeOfAccount)
+{
+    bool isFound = false;
+
+    var sortedTransactions = TransactionDict
+        .Where(transaction => transaction.Value.Item1 == user.Key && transaction.Value.Item3 == typeOfAccount)
+        .OrderBy(transaction => transaction.Value.Item2);
+
+    Console.WriteLine("\nTransakcije sortirani uzlazno po iznosu: ");
+    foreach (var transaction in sortedTransactions)
+    {
+        var Values = transaction.Value;
+        Console.WriteLine($"Transaction ID: {transaction.Key + ", ID korisnika: " + Values.Item1 + ", iznos: " + Values.Item2 + ", Tip racuna: " + Values.Item3 + ", opis transakcije: " + Values.Item4 + ",\n tip transakcije: " +
+                Values.Item5 + ", kategorija: " + Values.Item6 + ", datum i vrijeme transakcije: " + Values.Item7} ");
+        isFound = true;
+    }
+
+    if (!isFound)
+    {
+        Console.WriteLine("Nema pronađenih transakcija za odabranu vrstu računa i korisnika");
+    }
+}
+
+void ShowAllTransactions(KeyValuePair<int, Tuple<string, string, DateTime, Dictionary<string, double>>> user, string typeOfAccount)
+{
+    bool isFound = false;
+    foreach(var transaction in TransactionDict)
+    {
+        if(transaction.Value.Item1 == user.Key && transaction.Value.Item3 == typeOfAccount)
+        { 
+            var Values = transaction.Value;
+            Console.WriteLine($"Transaction ID: {transaction.Key + ", ID korisnika: " + Values.Item1 + ", iznos: " + Values.Item2 + ", Tip racuna: " + Values.Item3 + ", opis transakcije: " + Values.Item4 + ",\n tip transakcije: " +
+                Values.Item5 + ", kategorija: " + Values.Item6 + ", datum i vrijeme transakcije: " + Values.Item7} ");
+            isFound = true;
+        }
+    }
+    if(!isFound)
+        Console.WriteLine("Nije pronađena transakcija za odabranu vrstu računa i korisnika");
+}
+
+void EditTransactions(KeyValuePair<int, Tuple<string, string, DateTime, Dictionary<string, double>>> user, string typeOfAccount)
 {
     Console.WriteLine("Unesite ID transakcije koju želite izmjeniti");
     var id = Console.ReadLine();
@@ -263,12 +624,16 @@ void EditTransactions(KeyValuePair<int, Tuple<string, string, DateTime, Dictiona
     if (!int.TryParse(id, out idToEdit) || !TransactionDict.ContainsKey(idToEdit))
     {
         Console.WriteLine("Krivi unos ili transakcija s unesenim ID ne postoji. Unesite opet.");
-        EditTransactions(user);
+        EditTransactions(user, typeOfAccount);
         return;
     }
-
+    
     var currTuple = TransactionDict[idToEdit];
-
+    if(currTuple.Item3 != typeOfAccount)
+    {
+        Console.WriteLine("Odabrani ID ne spada u ovu vrstu računa");
+        EditTransactions(user, typeOfAccount);
+    }
     Console.WriteLine("Unesite novi ID transakcije, ostavite prazno za isto:");
     var newIdInput = Console.ReadLine();
     int currId = currTuple.Item1;
@@ -279,7 +644,7 @@ void EditTransactions(KeyValuePair<int, Tuple<string, string, DateTime, Dictiona
         if (TransactionDict.ContainsKey(currId))
         {
             Console.WriteLine("Id vec postoji, unesite novi");
-            EditTransactions(user);
+            EditTransactions(user, typeOfAccount);
             return;
         }
     }
@@ -294,7 +659,7 @@ void EditTransactions(KeyValuePair<int, Tuple<string, string, DateTime, Dictiona
         else
         {
             Console.WriteLine("Krivi unos iznosa, unesite opet");
-            EditTransactions(user);
+            EditTransactions(user, typeOfAccount);
             return;
         }
     }
@@ -306,7 +671,7 @@ void EditTransactions(KeyValuePair<int, Tuple<string, string, DateTime, Dictiona
     if(newTypeAccount != "ziro" && newTypeAccount != "tekuci" && newTypeAccount != "prepaid" && newTypeAccount.Length != 0)
     {
         Console.WriteLine("Krivi unos odaberite ziro tekuci ili prepaid");
-        EditTransactions(user);
+        EditTransactions(user, typeOfAccount);
         return;
     }
     if (newTypeAccount.Length == 0)
@@ -322,7 +687,7 @@ void EditTransactions(KeyValuePair<int, Tuple<string, string, DateTime, Dictiona
     if(newTypeOfTransaction != "prihod" && newTypeOfTransaction != "rashod" && newTypeOfTransaction.Length != 0)
     {
         Console.WriteLine("Krivi unos, unesite opet");
-        EditTransactions(user);
+        EditTransactions(user, typeOfAccount);
         return;
     }
     if(newTypeOfTransaction.Length == 0)
@@ -336,7 +701,7 @@ void EditTransactions(KeyValuePair<int, Tuple<string, string, DateTime, Dictiona
         if(!income.ContainsValue(newCategory) && newCategory.Length != 0)
         { 
             Console.WriteLine("Niste odabrali ispravnu kategoriju za prihode");
-            EditTransactions(user);
+            EditTransactions(user, typeOfAccount);
             return;
         }
     }
@@ -345,7 +710,7 @@ void EditTransactions(KeyValuePair<int, Tuple<string, string, DateTime, Dictiona
         if(!expense.ContainsValue(newCategory) && newCategory.Length != 0)
         { 
             Console.WriteLine("Niste odabrali ispravnu kategoriju za rashode");
-            EditTransactions(user);
+            EditTransactions(user, typeOfAccount);
             return;
         }
     }
@@ -363,7 +728,7 @@ void EditTransactions(KeyValuePair<int, Tuple<string, string, DateTime, Dictiona
         else
         {
             Console.WriteLine("Neispravan format datuma i vremena. Pokušajte ponovo.");
-            EditTransactions(user);
+            EditTransactions(user, typeOfAccount);
             return;
         }
     }
@@ -384,7 +749,6 @@ void EditTransactions(KeyValuePair<int, Tuple<string, string, DateTime, Dictiona
     Console.WriteLine($"Ažurirani podaci o transakciji: \nID transakcije: {newTransaction.Item1} Iznos: {newTransaction.Item2} Tip računa: {newTransaction.Item3} " +
         $"Opis transakcije: {newTransaction.Item4} Tip transakcije: {newTransaction.Item5} Kategorija: {newTransaction.Item6} Datum i vrijeme: {newTransaction.Item7}");
 }
-
 
 void ChooseHowToDeleteTransactions(KeyValuePair<int, Tuple<string, string, DateTime, Dictionary<string, double>>> user, string typeOfAccount)
 {
@@ -684,7 +1048,7 @@ void FillDataOfNewTransaction(DateTime dateTimeNow, KeyValuePair<int, Tuple<stri
         }
     }
     else
-        Console.WriteLine("Kirivi unos. Birajte opet");
+        Console.WriteLine("Krivi unos. Birajte opet");
 
     Console.WriteLine("Unesite iznos transakcije");
     string amnt = Console.ReadLine();
