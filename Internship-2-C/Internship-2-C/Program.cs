@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections;
 using System.Reflection;
+using System.Transactions;
 using System.Xml;
+using static System.Net.Mime.MediaTypeNames;
 
 Dictionary<int, Tuple<string, string, DateTime, Dictionary<string, double>>> UserDict = new Dictionary<int, Tuple<string, string, DateTime, Dictionary<string, double>>>();
 Dictionary<int, Tuple<int, double, string, string, string, string, DateTime>> TransactionDict = new Dictionary<int, Tuple<int, double, string, string, string, string, DateTime>>();
@@ -47,29 +49,35 @@ int transactionId = 0;
 DateTime dateTimeNow = DateTime.Now;
 
 DateTime user1BDay = new DateTime(1987, 06, 24);
-UserDict.Add(globalId++, Tuple.Create("Lionel", "Messi", user1BDay, bankAccount));
+UserDict.Add(globalId++, Tuple.Create("Lionel", "Messi", user1BDay, new Dictionary<string, double>(bankAccount)));
 
 DateTime user2BDay = new DateTime(1985, 02, 05);
-UserDict.Add(globalId++, Tuple.Create("Cristiano", "Ronaldo", user2BDay, bankAccount));
+UserDict.Add(globalId++, Tuple.Create("Cristiano", "Ronaldo", user2BDay, new Dictionary<string, double>(bankAccount)));
 
 DateTime user3BDay = new DateTime(1981, 10, 03);
-UserDict.Add(globalId++, Tuple.Create("Zlatan", "Ibrahimovic", user3BDay, bankAccount));
+UserDict.Add(globalId++, Tuple.Create("Zlatan", "Ibrahimovic", user3BDay, new Dictionary<string, double>(bankAccount)));
 
 DateTime user4BDay = new DateTime(1984, 05, 11);
-UserDict.Add(globalId++, Tuple.Create("Andres", "Iniesta", user4BDay, bankAccount));
+UserDict.Add(globalId++, Tuple.Create("Andres", "Iniesta", user4BDay, new Dictionary<string, double>(bankAccount)));
 
 DateTime user5BDay = new DateTime(1977, 02, 24);
-UserDict.Add(globalId++, Tuple.Create("Floyd", "Mayweather", user5BDay, bankAccountMinus));
+UserDict.Add(globalId++, Tuple.Create("Floyd", "Mayweather", user5BDay, new Dictionary<string, double>(bankAccountMinus)));
 
-TransactionDict.Add(transactionId++, Tuple.Create(0, 1092.22, "tekuci", "dobit od investicije", "prihod", income[4], dateTimeNow));
 TransactionDict.Add(transactionId++, Tuple.Create(1, 300.00, "tekuci", "plaćanje najamnine", "rashod", expense[2], dateTimeNow));
+TransactionDict.Add(transactionId++, Tuple.Create(0, 1092.22, "tekuci", "dobit od investicije", "prihod", income[4], dateTimeNow));
+TransactionDict.Add(transactionId++, Tuple.Create(0, 180.91, "ziro", "drzavna stipendija", "prihod", income[7], dateTimeNow));
+TransactionDict.Add(transactionId++, Tuple.Create(0, 190.91, "ziro", "večera", "rashod", expense[6], dateTimeNow));
+TransactionDict.Add(transactionId++, Tuple.Create(0, 180.91, "tekuci", "zivotno osiguranje", "rashod", expense[3], dateTimeNow));
+TransactionDict.Add(transactionId++, Tuple.Create(1, 245.12, "tekuci", "placa", "prihod", income[1], dateTimeNow));
 TransactionDict.Add(transactionId++, Tuple.Create(2, 30.00, "tekuci", "poklon za rodendan", "prihod", income[3], dateTimeNow));
 TransactionDict.Add(transactionId++, Tuple.Create(3, 340.00, "tekuci", "odijelo", "rashod", expense[4], dateTimeNow));
 TransactionDict.Add(transactionId++, Tuple.Create(4, 1500.00, "tekuci", "mjesecna penzija", "prihod", income[5], dateTimeNow));
-TransactionDict.Add(transactionId++, Tuple.Create(0, 180.91, "tekuci", "zivotno osiguranje", "rashod", expense[3], dateTimeNow));
 TransactionDict.Add(transactionId++, Tuple.Create(4, 180.91, "ziro", "drzavna stipendija", "prihod", income[7], dateTimeNow));
 TransactionDict.Add(transactionId++, Tuple.Create(4, 180.91, "prepaid", "igre na sreću", "rashod", expense[7], dateTimeNow));
-//UpdateBankAccounts(); /*za updateat ove dodane transakcije*/
+TransactionDict.Add(transactionId++, Tuple.Create(4, 10000.98, "prepaid", "huhu", "prihod", expense[7], dateTimeNow));
+TransactionDict.Add(transactionId++, Tuple.Create(4, 10070.00, "tekuci", "huhu", "prihod", income[7], dateTimeNow));
+
+UpdateBankAccounts(); /*za updateat ove dodane transakcije*/
 
 do
 {
@@ -273,15 +281,170 @@ void FinanceReportMenu(KeyValuePair<int, Tuple<string, string, DateTime, Diction
     char option = Console.ReadKey().KeyChar;
     switch(option)
     {
-        //case 'a':
-        //    AccountBalance(user, typeOfAccount);
-        //    return;
+        case 'a':
+            AccountBalance(user, typeOfAccount);
+            return;
         case 'b':
             NumberOfTransactions(user, typeOfAccount);
             return;
-
+        case 'c':
+            TotalIncomeAndExpense(user, typeOfAccount);
+            return;
+        case 'd':
+            PercentageOfExpense(user, typeOfAccount);
+            return;
+        case 'e':
+            AverageAmountMonthYear(user, typeOfAccount);
+            return;
+        case 'f':
+            AverageAmountCategory(user, typeOfAccount);
+            return;
     }
 }
+void AverageAmountCategory(KeyValuePair<int, Tuple<string, string, DateTime, Dictionary<string, double>>> user, string typeOfAccount)
+{
+    Console.WriteLine("Odaberite kategoriju ");
+    var category = Console.ReadLine();
+    if (!expense.ContainsValue(category) && !income.ContainsValue(category))
+    {
+        Console.WriteLine("Kriva kategorija. Unesite ispravnu");
+        AverageAmountCategory(user, typeOfAccount);
+        return;
+    }
+    var sortedTransactions = TransactionDict
+        .Where(transaction => transaction.Value.Item1 == user.Key && transaction.Value.Item3 == typeOfAccount && transaction.Value.Item6 == category)
+        .ToList();
+
+    if (!sortedTransactions.Any())
+    {
+        Console.WriteLine($"Nisu pronadene transakcije za odabranu kategoriju");
+        return;
+    }
+
+    int numOfTransaction = 0;
+    double categoryAmount = 0.0;
+    foreach (var transaction in sortedTransactions)
+    {
+        categoryAmount += transaction.Value.Item2;
+        numOfTransaction++;
+    }
+    Console.WriteLine($"Ukupni broj transakcija za odabranu kategoriju je {numOfTransaction}, ukupan iznos je: { categoryAmount}. Proječni iznos je: { categoryAmount/numOfTransaction }");
+
+}
+void AverageAmountMonthYear(KeyValuePair<int, Tuple<string, string, DateTime, Dictionary<string, double>>> user, string typeOfAccount)
+{
+    Console.WriteLine("Unesite mjesec(broj mjeseca):");
+    var monthString = Console.ReadLine();
+    Console.WriteLine("Unesite godinu:");
+    var yearString = Console.ReadLine();
+
+    if (!int.TryParse(monthString, out int month) || !int.TryParse(yearString, out int year))
+    {
+        Console.WriteLine("Krivi unos za mjesec ili godinu.");
+        return;
+    }
+
+    var sortedTransactions = TransactionDict
+        .Where(transaction => transaction.Value.Item1 == user.Key &&
+                             transaction.Value.Item3 == typeOfAccount &&
+                             transaction.Value.Item7.Month == month &&
+                             transaction.Value.Item7.Year == year)
+        .ToList();
+
+    if (!sortedTransactions.Any())
+    {
+        Console.WriteLine($"Nisu pronadene transakcija za korisnika {user.Value.Item1} u {month} mjesecu {year}.");
+        return;
+    }
+
+    int numOfTransactions = 0;
+    double amount = 0.0;
+    foreach (var transaction in sortedTransactions)
+    {
+        amount += transaction.Value.Item2;
+        numOfTransactions++;
+    }
+    Console.WriteLine($"Ukupno transakcija u odabranome mjesecu i godini: { numOfTransactions }, ukupni iznos: { amount }. Prosjecni iznos po transakciji iznosi: { amount/numOfTransactions } ");
+}
+
+void PercentageOfExpense(KeyValuePair<int, Tuple<string, string, DateTime, Dictionary<string, double>>> user, string typeOfAccount)
+{
+    Console.WriteLine("Odaberite kategoriju za rashode");
+    var category = Console.ReadLine();
+    if(!expense.ContainsValue(category))
+    {
+        Console.WriteLine("Kriva kategorija. Unesite ispravnu");
+        PercentageOfExpense(user, typeOfAccount);
+        return;
+    }
+    var sortedTransactions = TransactionDict
+        .Where(transaction => transaction.Value.Item1 == user.Key && transaction.Value.Item3 == typeOfAccount && transaction.Value.Item5 == "rashod")
+        .ToList();
+
+    if (!sortedTransactions.Any())
+    {
+        Console.WriteLine($"Nisu pronadene transakcija za korisnika za rashode");
+        return;
+    }
+
+    double totalExpense = 0.0;
+    double categoryExpense = 0.0;
+    foreach (var transaction in sortedTransactions)
+    {
+        
+        if(transaction.Value.Item6 == category)
+        {
+            categoryExpense += transaction.Value.Item2;
+        }
+        totalExpense += transaction.Value.Item2;
+    }
+    Console.WriteLine($"Postotak rashoda za odabranu kategoriju({category}) iznosi: { categoryExpense/totalExpense * 100} %");
+}
+void TotalIncomeAndExpense(KeyValuePair<int, Tuple<string, string, DateTime, Dictionary<string, double>>> user, string typeOfAccount)
+{
+    Console.WriteLine("Unesite mjesec(broj mjeseca):");
+    var monthString = Console.ReadLine();
+    Console.WriteLine("Unesite godinu:");
+    var yearString = Console.ReadLine();
+
+    if (!int.TryParse(monthString, out int month) || !int.TryParse(yearString, out int year))
+    {
+        Console.WriteLine("Krivi unos za mjesec ili godinu.");
+        return;
+    }
+
+    double totalIncome = 0.0;
+    double totalExpense = 0.0;
+
+    var sortedTransactions = TransactionDict
+        .Where(transaction => transaction.Value.Item1 == user.Key &&
+                             transaction.Value.Item3 == typeOfAccount &&
+                             transaction.Value.Item7.Month == month &&
+                             transaction.Value.Item7.Year == year)
+        .ToList();
+
+    if (!sortedTransactions.Any())
+    {
+        Console.WriteLine($"Nisu pronadene transakcija za korisnika {user.Value.Item1} u {month} mjesecu {year}.");
+        return;
+    }
+
+    foreach (var transaction in sortedTransactions)
+    {
+        double amount = transaction.Value.Item2;
+        string transactionType = transaction.Value.Item5;
+
+        if (transactionType == "prihod")
+            totalIncome += amount;
+        
+        else if (transactionType == "rashod")
+            totalExpense += amount;  
+    }
+
+    Console.WriteLine($"Ukupni prihod za mjesec: {month} i godinu: {year} je: {totalIncome}.");
+    Console.WriteLine($"Ukupni rashod za mjesec: {month} i godinu: {year} je: {totalExpense}.");
+}
+
 void NumberOfTransactions(KeyValuePair<int, Tuple<string, string, DateTime, Dictionary<string, double>>> user, string typeOfAccount)
 {
     var numOfTotalTransactions = 0;
@@ -293,10 +456,10 @@ void NumberOfTransactions(KeyValuePair<int, Tuple<string, string, DateTime, Dict
     Console.WriteLine($"Broj ukupnih transakcija korisnika: {numOfTotalTransactions}");
 }
 
-//void AccountBalance(KeyValuePair<int, Tuple<string, string, DateTime, Dictionary<string, double>>> user, string typeOfAccount)
-//{
-
-//}
+void AccountBalance(KeyValuePair<int, Tuple<string, string, DateTime, Dictionary<string, double>>> user, string typeOfAccount)
+{
+    Console.WriteLine($"Stanje za {typeOfAccount} račun korisnika {user.Value.Item1 + " " + user.Value.Item2} iznosi: {user.Value.Item4[typeOfAccount]}");
+}
 void ShowTransactionMenu(KeyValuePair<int, Tuple<string, string, DateTime, Dictionary<string, double>>> user, string typeOfAccount)
 {
     Console.WriteLine("\t a) sve transakcije kako su spremljene \n\t b) sve transakcije sortirane po iznosu uzlazno \n\t c) sve transakcije sortirane po iznosu silazno " +
@@ -1058,6 +1221,7 @@ void FillDataOfNewTransaction(DateTime dateTimeNow, KeyValuePair<int, Tuple<stri
     string descriptionOfTransaction = Console.ReadLine();
 
     TransactionDict.Add(transactionId++, Tuple.Create(userId, amount, typeOfAccount, descriptionOfTransaction, typeOfTransaction, choosenCategory, dateTimeNow));
+    //UpdateBankAccounts();
 }
 void ShowOptions()
 {
@@ -1290,10 +1454,14 @@ void PrintUsersInMinus()
         }
     }
 }
-
 void UpdateBankAccounts()
 {
-    foreach(var transaction in TransactionDict)
+    //if (TransactionDict.Count == 0)
+    //{
+    //    Console.WriteLine("No new transactions to process.");
+    //    return;
+    //}
+    foreach (var transaction in TransactionDict)
     {
         int userId = transaction.Value.Item1;
         double amount = transaction.Value.Item2;
@@ -1302,9 +1470,10 @@ void UpdateBankAccounts()
 
         if (transType == "prihod")
             UserDict[userId].Item4[accType] += amount;
-        else if(transType == "rashod")
+        else if (transType == "rashod")
             UserDict[userId].Item4[accType] -= amount;
 
+        UserDict[userId].Item4[accType] = Math.Round(UserDict[userId].Item4[accType], 2);
         //ne triba provjera postoji li korisnik s tim IDem, osigurano prije poziva funkcije da postoji korisnik s tim id
     }
 }
