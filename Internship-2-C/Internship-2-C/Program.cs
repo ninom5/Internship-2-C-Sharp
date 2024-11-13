@@ -919,12 +919,26 @@ void EditTransactions(KeyValuePair<int, Tuple<string, string, DateTime, Dictiona
         newCategory,
         newDateTime
     );
-
-    TransactionDict[idToEdit] = newTransaction;
-    Console.WriteLine("Transakcija uspjesno uređena");
-
-    Console.WriteLine($"Ažurirani podaci o transakciji: \nID transakcije: {newTransaction.Item1} Iznos: {newTransaction.Item2} Tip računa: {newTransaction.Item3} " +
+    Console.WriteLine("Zelite li stvarno urediti transakciju: y/n");
+    char confirmation = Console.ReadKey().KeyChar;
+    while(confirmation != 'y' && confirmation != 'n')
+    {
+        Console.WriteLine("Krivi unos, unesite opet");
+        confirmation = Console.ReadKey().KeyChar;
+    }
+    if(confirmation == 'y')
+    {
+        TransactionDict[idToEdit] = newTransaction;
+        Console.WriteLine("Transakcija uspjesno uređena");
+        Console.WriteLine($"Ažurirani podaci o transakciji: \nID transakcije: {newTransaction.Item1} Iznos: {newTransaction.Item2} Tip računa: {newTransaction.Item3} " +
         $"Opis transakcije: {newTransaction.Item4} Tip transakcije: {newTransaction.Item5} Kategorija: {newTransaction.Item6} Datum i vrijeme: {newTransaction.Item7}");
+    }
+    else
+    {
+        Console.WriteLine("Uredivanje transakcije prekinuto");
+        return;
+    }
+    
 }
 
 void ChooseHowToDeleteTransactions(KeyValuePair<int, Tuple<string, string, DateTime, Dictionary<string, double>>> user, string typeOfAccount)
@@ -971,51 +985,80 @@ void DeleteEveryTransactionForChoosenCategory(KeyValuePair<int, Tuple<string, st
         DeleteEveryTransactionForChoosenCategory(user);
         return;
     }
-    
-    foreach(var transaction in TransactionDict)
+
+    char confirmation = Confirmation();
+    if (confirmation == 'y')
     {
-        if (transaction.Value.Item1 == user.Key && transaction.Value.Item6 == category)
+        foreach (var transaction in TransactionDict)
         {
-            int id = transaction.Key;
-            TransactionDict.Remove(id);
-            Console.WriteLine($"Transakcija s ID {id} uspješno izbrisana");
-            isDeleted = true;
+            if (transaction.Value.Item1 == user.Key && transaction.Value.Item6 == category)
+            {
+                int id = transaction.Key;
+                TransactionDict.Remove(id);
+                Console.WriteLine($"Transakcija s ID {id} uspješno izbrisana");
+                isDeleted = true;
+            }
         }
+        if (!isDeleted)
+            Console.WriteLine($"Ne postoji transakcija za odabranog korisnika s kategorijom {category}");
     }
-    if (!isDeleted)
-        Console.WriteLine($"Ne postoji transakcija za odabranog korisnika s kategorijom {category}");
+    else
+    {
+        Console.WriteLine("Brisanje transakcije prekinuto");
+        return;
+    }
 }
+
 void DeleteEveryExpense(KeyValuePair<int, Tuple<string, string, DateTime, Dictionary<string, double>>> user)
 {
-    bool isDeleted = false;
-    foreach (var transaction in TransactionDict)
-    {
-        if (transaction.Value.Item1 == user.Key && transaction.Value.Item5 == "rashod")
+    char confirmation = Confirmation();
+    if(confirmation == 'y')
+    {   
+        bool isDeleted = false;
+    
+        foreach (var transaction in TransactionDict)
         {
-            int id = transaction.Key;
-            TransactionDict.Remove(id);
-            Console.WriteLine($"Transakcija s ID {id} uspješno izbrisana");
-            isDeleted = true;
+            if (transaction.Value.Item1 == user.Key && transaction.Value.Item5 == "rashod")
+            {
+                int id = transaction.Key;
+                TransactionDict.Remove(id);
+                Console.WriteLine($"Transakcija s ID {id} uspješno izbrisana");
+                isDeleted = true;
+            }
         }
+        if (!isDeleted)
+            Console.WriteLine("Ne postoje transakcije odabranog korisnika s rashodima");
     }
-    if (!isDeleted)
-        Console.WriteLine("Ne postoje transakcije odabranog korisnika s rashodima");
+    else
+    {
+        Console.WriteLine("Brisanje prekinuto");
+        return;
+    }
 }
 void DeleteEveryIncome(KeyValuePair<int, Tuple<string, string, DateTime, Dictionary<string, double>>> user)
 {
-    bool isDeleted = false;
-    foreach(var transaction in TransactionDict)
+    char confirmation = Confirmation();
+    if (confirmation == 'y')
     {
-        if(transaction.Value.Item1 ==  user.Key && transaction.Value.Item5 == "prihod")
+        bool isDeleted = false;
+        foreach (var transaction in TransactionDict)
         {
-            int id = transaction.Key;
-            TransactionDict.Remove(id);
-            Console.WriteLine($"Transakcija s ID {id} uspješno izbrisana");
-            isDeleted = true;
+            if (transaction.Value.Item1 == user.Key && transaction.Value.Item5 == "prihod")
+            {
+                int id = transaction.Key;
+                TransactionDict.Remove(id);
+                Console.WriteLine($"Transakcija s ID {id} uspješno izbrisana");
+                isDeleted = true;
+            }
         }
+        if (!isDeleted)
+            Console.WriteLine("Ne postoje transakcije odabranog korisnika s prihodima");
     }
-    if(!isDeleted)
-        Console.WriteLine("Ne postoje transakcije odabranog korisnika s prihodima");
+    else
+    {
+        Console.WriteLine("Brisanje prekinuto");
+        return;
+    }
 }
 
 void DeleteEveryTranscOverAmount(KeyValuePair<int, Tuple<string, string, DateTime, Dictionary<string, double>>> user)
@@ -1026,20 +1069,29 @@ void DeleteEveryTranscOverAmount(KeyValuePair<int, Tuple<string, string, DateTim
     double amountToDelete;
     if (double.TryParse(amount, out amountToDelete))
     {
-        foreach (var transaction in TransactionDict)
+        char confirmation = Confirmation();
+        if(confirmation == 'y')
         {
-            double currentAmount = transaction.Value.Item2;
-            if (transaction.Value.Item1 == user.Key && currentAmount > amountToDelete)
+            foreach (var transaction in TransactionDict)
             {
-                int id = transaction.Key;
-                TransactionDict.Remove(id);
-                Console.WriteLine($"Transakcija s ID {id} uspješno izbrisana. Iznos koji je bio: {currentAmount}");
-                isDeleted = true;
+                double currentAmount = transaction.Value.Item2;
+                if (transaction.Value.Item1 == user.Key && currentAmount > amountToDelete)
+                {
+                    int id = transaction.Key;
+                    TransactionDict.Remove(id);
+                    Console.WriteLine($"Transakcija s ID {id} uspješno izbrisana. Iznos koji je bio: {currentAmount}");
+                    isDeleted = true;
+                }
+            }
+            if (!isDeleted)
+            {
+                Console.WriteLine("Ne postoji transakcija za odabranog korisnika s iznosom većim od unesenog");
             }
         }
-        if (!isDeleted)
+        else
         {
-            Console.WriteLine("Ne postoji transakcija za odabranog korisnika s iznosom većim od unesenog");
+            Console.WriteLine("Brisanje prekinuto");
+            return;
         }
     }
     else
@@ -1056,20 +1108,29 @@ void DeleteEveryTranscUnderAmount(KeyValuePair<int, Tuple<string, string, DateTi
     double amountToDelete;
     if (double.TryParse(amount, out amountToDelete))
     {
-        foreach(var transaction in TransactionDict)
+        char confirmation = Confirmation();
+        if (confirmation == 'y')
         {
-            double currentAmount = transaction.Value.Item2;
-            if (transaction.Value.Item1 == user.Key && currentAmount < amountToDelete)
+            foreach (var transaction in TransactionDict)
             {
-                int id = transaction.Key;
-                TransactionDict.Remove(id);
-                Console.WriteLine($"Transakcija s ID {id} uspješno izbrisana. Iznos koji je bio: { currentAmount }");
-                isDeleted = true;
+                double currentAmount = transaction.Value.Item2;
+                if (transaction.Value.Item1 == user.Key && currentAmount < amountToDelete)
+                {
+                    int id = transaction.Key;
+                    TransactionDict.Remove(id);
+                    Console.WriteLine($"Transakcija s ID {id} uspješno izbrisana. Iznos koji je bio: {currentAmount}");
+                    isDeleted = true;
+                }
+            }
+            if (!isDeleted)
+            {
+                Console.WriteLine("Ne postoji transakcija za odabranog korisnika s iznosom manjim od unesenog");
             }
         }
-        if(!isDeleted)
+        else
         {
-            Console.WriteLine("Ne postoji transakcija za odabranog korisnika s iznosom manjim od unesenog");
+            Console.WriteLine("Brisanje prekinuto");
+            return;
         }
     }
     else
@@ -1089,15 +1150,24 @@ void DeleteById(KeyValuePair<int, Tuple<string, string, DateTime, Dictionary<str
         int idToDelete;
         if (int.TryParse(ID, out idToDelete))
         {
-            if (TransactionDict.ContainsKey(idToDelete) && user.Key == idToDelete)
+            char confirmation = Confirmation();
+            if (confirmation == 'y')
             {
-                TransactionDict.Remove(idToDelete);
-                Console.WriteLine($"Transakcija s ID {idToDelete} uspjesno izbrisana.");
-                isDeleted = true;
+                if (TransactionDict.ContainsKey(idToDelete) && user.Key == idToDelete)
+                {
+                    TransactionDict.Remove(idToDelete);
+                    Console.WriteLine($"Transakcija s ID {idToDelete} uspjesno izbrisana.");
+                    isDeleted = true;
+                }
+                else
+                {
+                    Console.WriteLine("Ne postoji transakcija s unesenim IDom za odabranog korisnika");
+                }
             }
             else
             {
-                Console.WriteLine("Ne postoji transakcija s unesenim IDom za odabranog korisnika");
+                Console.WriteLine("Brisanje prekinuto");
+                return;
             }
         }
         else
@@ -1487,4 +1557,15 @@ void UpdateBankAccounts()
         //ne triba provjera postoji li korisnik s tim IDem, osigurano prije poziva funkcije da postoji korisnik s tim id
         processedTransactions.Add(transactionId);
     }
+}
+char Confirmation()
+{
+    Console.WriteLine("Zelite li stvarno urediti transakciju: y/n");
+    char confirmation = Console.ReadKey().KeyChar;
+    while (confirmation != 'y' && confirmation != 'n')
+    {
+        Console.WriteLine("Krivi unos, unesite opet");
+        confirmation = Console.ReadKey().KeyChar;
+    }
+    return confirmation;
 }
