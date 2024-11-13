@@ -7,6 +7,7 @@ using static System.Net.Mime.MediaTypeNames;
 
 Dictionary<int, Tuple<string, string, DateTime, Dictionary<string, double>>> UserDict = new Dictionary<int, Tuple<string, string, DateTime, Dictionary<string, double>>>();
 Dictionary<int, Tuple<int, double, string, string, string, string, DateTime>> TransactionDict = new Dictionary<int, Tuple<int, double, string, string, string, string, DateTime>>();
+HashSet<int> processedTransactions = new HashSet<int>();
 
 var bankAccount = new Dictionary<string, double>
 {
@@ -1117,6 +1118,7 @@ void EnterNewTransaction(KeyValuePair<int, Tuple<string, string, DateTime, Dicti
                 if (DateTime.TryParseExact(date, "dd/MM/yyyy HH:mm", null, System.Globalization.DateTimeStyles.None, out dateAndTimeOfTransaction))
                 {
                     FillDataOfNewTransaction(dateAndTimeOfTransaction, user, typeOfAccount);
+                    //UpdateBankAccounts();
                     return;
                 }
                 else
@@ -1221,7 +1223,7 @@ void FillDataOfNewTransaction(DateTime dateTimeNow, KeyValuePair<int, Tuple<stri
     string descriptionOfTransaction = Console.ReadLine();
 
     TransactionDict.Add(transactionId++, Tuple.Create(userId, amount, typeOfAccount, descriptionOfTransaction, typeOfTransaction, choosenCategory, dateTimeNow));
-    //UpdateBankAccounts();
+    UpdateBankAccounts();
 }
 void ShowOptions()
 {
@@ -1463,10 +1465,14 @@ void UpdateBankAccounts()
     //}
     foreach (var transaction in TransactionDict)
     {
+        int transactionId = transaction.Key;
         int userId = transaction.Value.Item1;
         double amount = transaction.Value.Item2;
         string accType = transaction.Value.Item3;
         string transType = transaction.Value.Item5;
+
+        if (processedTransactions.Contains(transactionId))
+            continue;
 
         if (transType == "prihod")
             UserDict[userId].Item4[accType] += amount;
@@ -1475,5 +1481,6 @@ void UpdateBankAccounts()
 
         UserDict[userId].Item4[accType] = Math.Round(UserDict[userId].Item4[accType], 2);
         //ne triba provjera postoji li korisnik s tim IDem, osigurano prije poziva funkcije da postoji korisnik s tim id
+        processedTransactions.Add(transactionId);
     }
 }
