@@ -32,7 +32,9 @@ var income = new Dictionary<int, string>
     { 4, "investicije" },
     { 5, "penzija" },
     { 6, "bonus" },
-    { 7, "stipendija" }
+    { 7, "stipendija" },
+    {8, "interni prijenos" },
+    {9, "externi prijenos" }
 };
 
 var expense = new Dictionary<int, string>
@@ -43,7 +45,9 @@ var expense = new Dictionary<int, string>
     { 4, "odjeća" },
     { 5, "donacije" },
     { 6, "restoran" },
-    { 7, "kladionica" }
+    { 7, "kladionica" },
+    {8, "interni prijenos" },
+    {9, "externi prijenos" }
 };
 
 int dummy = -1;
@@ -365,7 +369,7 @@ void SendMoneyIntern(KeyValuePair<int, Tuple<string, string, DateTime, Dictionar
                 source,
                 description,
                 type,
-                destination,
+                expense[8],
                 transactionDate
             );
 
@@ -378,7 +382,7 @@ void SendMoneyIntern(KeyValuePair<int, Tuple<string, string, DateTime, Dictionar
                 destination,
                 description,
                 typeReciever,
-                destination,
+                income[8],
                 transactionDate
             );
 
@@ -451,7 +455,7 @@ void SendMoneyExtern(KeyValuePair<int, Tuple<string, string, DateTime, Dictionar
                     source,
                     description,
                     type,
-                    destination,
+                    expense[9],
                     transactionDate
                 );
 
@@ -463,7 +467,7 @@ void SendMoneyExtern(KeyValuePair<int, Tuple<string, string, DateTime, Dictionar
                     destination,
                     description,
                     typeReciever,
-                    source,
+                    income[9],
                     transactionDate
                 );
 
